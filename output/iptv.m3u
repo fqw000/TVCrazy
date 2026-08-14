@@ -1,34 +1,20 @@
 #EXTM3U
-#EXTINF:-1 group-title="港澳台频道",澳门风云3
-https://vip.lz-cdn8.com/20220903/25592_5fdbb860/index.m3u8
-#EXTINF:-1 group-title="港澳台频道",澳门风云2
-https://vip.lz-cdn8.com/20220903/25590_a12ec6f7/index.m3u8
-#EXTINF:-1 group-title="省级频道",东方三侠
-http://jsmov2.a.yximgs.com/bs3/video-hls/5222205346628851891_hlsb.m3u8
 #EXTINF:-1 group-title="省级频道",东方秃鹰
 http://jsmov2.a.yximgs.com/bs3/video-hls/5218546164654879826_hlsb.m3u8
+#EXTINF:-1 group-title="省级频道",东方三侠
+http://jsmov2.a.yximgs.com/bs3/video-hls/5222205346628851891_hlsb.m3u8
 #EXTINF:-1 group-title="省级频道",浙江经视
 https://ali-m-l.cztv.com/channels/lantian/channel003/1080p.m3u8
 #EXTINF:-1 group-title="省级频道",浙江教科影视
 https://ali-m-l.cztv.com/channels/lantian/channel004/1080p.m3u8
 #EXTINF:-1 group-title="省级频道",浙江民生休闲
 https://ali-m-l.cztv.com/channels/lantian/channel006/1080p.m3u8
-#EXTINF:-1 group-title="省级频道",浙江国际
-https://ali-m-l.cztv.com/channels/lantian/channel010/1080p.m3u8
 #EXTINF:-1 group-title="省级频道",浙江公共新闻
 https://ali-m-l.cztv.com/channels/lantian/channel007/1080p.m3u8
 #EXTINF:-1 group-title="省级频道",浙江少儿
 https://ali-m-l.cztv.com/channels/lantian/channel008/1080p.m3u8
-#EXTINF:-1 group-title="其它频道",监狱风云1
-https://vip.lz-cdn3.com/20230114/17167_f0f5a918/index.m3u8
-#EXTINF:-1 group-title="其它频道",寒战2
-https://vip.lz-cdn3.com/20220907/12892_5eb849b0/index.m3u8
-#EXTINF:-1 group-title="其它频道",监狱风云2
-https://vip.lz-cdn3.com/20230114/17169_e351e7c8/index.m3u8
-#EXTINF:-1 group-title="其它频道",赌神2
-https://vip.lz-cdn.com/20220622/20003_820596d4/index.m3u8
-#EXTINF:-1 group-title="其它频道",暴走财神5
-https://v.cdnlz12.com/20240214/11569_e1ddc734/2000k/hls/mixed.m3u8
+#EXTINF:-1 group-title="省级频道",浙江国际
+https://ali-m-l.cztv.com/channels/lantian/channel010/1080p.m3u8
 #EXTINF:-1 group-title="其它频道",刀剑笑
 http://jsmov2.a.yximgs.com/bs3/video-hls/5215168447635500734_hlsb.m3u8
 #EXTINF:-1 group-title="其它频道",春晚1984
@@ -39,10 +25,10 @@ https://alimov2.a.kwimgs.com/upic/2022/01/31/16/BMjAyMjAxMzExNjAwMDFfNDAzMDAxOTl
 https://txmov2.a.kwimgs.com/upic/2022/01/31/16/BMjAyMjAxMzExNjAwMDhfNDAzMDAxOTlfNjYyNzMyNjMyMDNfMF8z_b_B570493ed8f7200d4013a66b2d21b2de9.mp4
 #EXTINF:-1 group-title="其它频道",春晚1987西游记齐天乐
 https://txmov2.a.kwimgs.com/bs3/video-hls/5257389657904396113_hlsb.m3u8
-#EXTINF:-1 group-title="其它频道",春晚1989
-https://txmov2.a.kwimgs.com/upic/2022/01/31/16/BMjAyMjAxMzExNjAwMTVfNDAzMDAxOTlfNjYyNzMyNzQ2OTlfMF8z_b_Be477b27b9ce655d2372df56a5a3d96ef.mp4
 #EXTINF:-1 group-title="其它频道",春晚1988
 https://txmov2.a.kwimgs.com/bs3/video-hls/5216575810935394655_hlsb.m3u8
+#EXTINF:-1 group-title="其它频道",春晚1989
+https://txmov2.a.kwimgs.com/upic/2022/01/31/16/BMjAyMjAxMzExNjAwMTVfNDAzMDAxOTlfNjYyNzMyNzQ2OTlfMF8z_b_Be477b27b9ce655d2372df56a5a3d96ef.mp4
 #EXTINF:-1 group-title="其它频道",春晚1990
 https://alimov2.a.kwimgs.com/upic/2023/01/24/09/BMjAyMzAxMjQwOTIyNDRfNzM5MzQzNzIyXzk0NDU2MTIzNDIyXzBfMw==_b_Bd54d02343cb1d4371a6bae7535ca2e8e.mp4
 #EXTINF:-1 group-title="其它频道",春晚1994
@@ -69,8 +55,6 @@ http://txmov2.a.kwimgs.com/upic/2022/01/30/17/BMjAyMjAxMzAxNzE4NTJfNDAzMDAxOTlfN
 http://txmov2.a.kwimgs.com/upic/2022/02/01/11/BMjAyMjAyMDExMTEwMjNfNDAzMDAxOTlfNjYzNzA4MTk4NzNfMF8z_b_B898cc7ddd0025bf54ddb18ec1f723c84.mp4
 #EXTINF:-1 group-title="其它频道",春晚2019
 https://vip.lz-cdn11.com/20220609/8280_91f1555d/index.m3u8
-#EXTINF:-1 group-title="其它频道",春晚2024
-https://v.cdnlz13.com/20240210/24176_cd3c5aff/index.m3u8
 #EXTINF:-1 group-title="其它频道",黄飞鸿之男儿当自强
 https://txmov2.a.kwimgs.com/upic/2020/05/16/01/BMjAyMDA1MTYwMTAyMjFfMjEyNDgzMjg2XzI4NjI3OTAwNTc5XzJfMw==_b_Bc1101c249e7355d840c4495b7bfd84a4.mp4
 #EXTINF:-1 group-title="其它频道",黄飞鸿之狮王争霸
@@ -79,8 +63,6 @@ https://alimov2.a.kwimgs.com/upic/2020/05/15/08/BMjAyMDA1MTUwODQ5NTdfMjEyNDgzMjg
 http://jsmov2.a.yximgs.com/bs3/video-hls/5250634242822045870_hlsb.m3u8
 #EXTINF:-1 group-title="其它频道",黄飞鸿之壮志凌云
 http://jsmov2.a.yximgs.com/bs3/video-hls/5189554175568165120_hlsb.m3u8
-#EXTINF:-1 group-title="其它频道",金手指HD粤
-https://v.cdnlz12.com/20240213/11556_3642faee/2000k/hls/mixed.m3u8
 #EXTINF:-1 group-title="其它频道",九二神雕之痴心情长剑
 http://jsmov2.a.yximgs.com/bs3/video-hls/5188428323796620673_hlsb.m3u8
 #EXTINF:-1 group-title="其它频道",九一神雕侠侣
@@ -89,10 +71,10 @@ http://jsmov2.a.yximgs.com/bs3/video-hls/5227553349016599035_hlsb.m3u8
 http://jsmov2.a.yximgs.com/bs3/video-hls/5203346449046555193_hlsb.m3u8
 #EXTINF:-1 group-title="其它频道",龙兄虎弟
 http://jsmov2.a.yximgs.com/bs3/video-hls/5250352837791566632_hlsb.m3u8
-#EXTINF:-1 group-title="其它频道",倩女幽魂人间道
-http://jsmov2.a.yximgs.com/bs3/video-hls/5250634317044855747_hlsb.m3u8
 #EXTINF:-1 group-title="其它频道",倩女幽魂道道道
 http://jsmov2.a.yximgs.com/bs3/video-hls/5216294367991385255_hlsb.m3u8
+#EXTINF:-1 group-title="其它频道",倩女幽魂人间道
+http://jsmov2.a.yximgs.com/bs3/video-hls/5250634317044855747_hlsb.m3u8
 #EXTINF:-1 group-title="其它频道",倩女幽魂妖魔道
 http://jsmov2.a.yximgs.com/bs3/video-hls/5232901391302199073_hlsb.m3u8
 #EXTINF:-1 group-title="其它频道",人在囧途
@@ -101,8 +83,6 @@ http://jsmov2.a.yximgs.com/bs3/video-hls/5239093847755471351_hlsb.m3u8
 https://alimov2.a.kwimgs.com/upic/2021/10/01/19/BMjAyMTEwMDExOTA1MDVfMTI0MzE0NjMyOF81ODE5NzY0NzAyOF8yXzM=_b_B6eb284159f267349ab21b64feb3d48ce.mp4
 #EXTINF:-1 group-title="其它频道",天若有情
 http://jsmov2.a.yximgs.com/bs3/video-hls/5246412168297899387_hlsb.m3u8
-#EXTINF:-1 group-title="其它频道",无间道2
-https://vip.lzcdn2.com/20220323/300_8be28e1c/index.m3u8
 #EXTINF:-1 group-title="其它频道",圍頭新娘
 https://boot-video.xuexi.cn/video/1005/p/10289963186488688655441005/d78d85bd06f7455db1bb794f0a0fcc39-2.m3u8
 #EXTINF:-1 group-title="其它频道",醉拳
