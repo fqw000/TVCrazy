@@ -8,12 +8,85 @@ import os
 import threading
 from queue import Queue
 import argparse
+from collections import defaultdict
 
-# 归一化频道名称
+# ================== 频道分类规则（参考第二个 py） ==================
+GROUP_RULES = [
+    (r'(CCTV[-]?14|哈哈炫动|卡酷|宝宝|幼教|贝瓦|巧虎|新科动漫|小猪佩奇|汪汪队|海底小纵队|米老鼠|迪士尼|熊出没|猫和老鼠|哆啦A梦|喜羊羊|青少|儿童|动画|动漫|少儿|卡通|金鹰|disney|cartoon|nickelodeon|kids|kika|cbbc|哈哈炫动)', "🧸 儿童动画"),
+    (r'(央视|CCTV[0-9]*[高清]?|CGTN|CCTV|风云音乐|第一剧场|怀旧剧场|女性时尚|风云足球|世界地理|兵器科技|电视指南)', "🇨🇳 央视频道"),
+    (r'(卫视|湖南|浙江|江苏|北京|广东|深圳|东方|安徽|山东|河南|湖北|四川|辽宁|东南|天津|四川|内蒙古|云南)', "📺 卫视频道"),
+    (r'(翡翠|明珠|凤凰|鳳凰东森|莲花|AMC|龙华|澳亚|港台|寰宇|TVB|华语|中天|东森|年代|民视|三立|星空|民视|台视|美亚|美亞|千禧|无线|無線|VIUTV|HOY|RTHK|Now|靖天|星卫|香港|澳门|台湾)', "🇭🇰 港澳台频道"),
+    (r'(体育|CCTV5|高尔夫|足球|NBA|英超|西甲|欧冠)', "⚽ 体育频道"),
+    (r'(电影|影院|CHC|HBO|星空|AXN|TCM|佳片)', "🎬 影视频道"),
+    (r'(AMC|BET|Discovery|CBS|BET|cine|CNN|disney|epix|espn|fox|american|boomerang|cnbc|entertainment|fs|fuse|fx|hbo|国家地理|Animal Planet|BBC|NHK|DW|France24|CNN|Al Jazeera)', "🌍 国际频道"),
+    (r'(教育|课堂|空中|大学|学习|国学|书画|考试|中学|学堂)', "🎓 教育频道"),
+    (r"^(?=.*[a-zA-Z])(?!.*\b(cctv|cgtn)\b)[a-zA-Z0-9\s\-\+\&\.\'\!\(\)]+$", "🌍 国际频道"),
+]
+
+GROUP_OUTPUT_ORDER = [
+    "🇨🇳 央视频道", "📺 卫视频道", "🎬 影视频道", "⚽ 体育频道",
+    "🧸 儿童动画", "🌍 国际频道", "🎓 教育频道", "🇭🇰 港澳台频道", "📺 其他频道"
+]
+
+
+# 归一化频道名称（参考第二个 py 的严格逻辑 + 保留原映射）
 def channel_name_normalize(name):
-    for rep in ["高清", "超高", "HD", "标清", "频道", "-", " ", "PLUS", "＋", "(", ")"]:
-        name = name.replace(rep, "" if rep not in ["PLUS", "＋"] else "+")
-    name = re.sub(r"CCTV(\d+)台", r"CCTV\1", name)
+    if not name or not isinstance(name, str):
+        return "Unknown"
+
+    original = name.strip()
+    if not original:
+        return "Unknown"
+
+    # 多频道拼接取主频道 (A-B-C -> A)
+    if "-" in original and len(original.split("-")) >= 3:
+        original = original.split("-", 1)[0].strip()
+
+    name = original
+
+    # 移除括号及内容
+    name = re.sub(r'\s*[\(（【\[][^)）】\]]*[\)）】\]]\s*', '', name)
+
+    # 统一连接符为空格
+    name = re.sub(r'[\s\-·•_\|]+', ' ', name)
+    name = re.sub(r'\s+', ' ', name).strip()
+
+    # 移除冗余后缀
+    suffix_pattern = (
+        r'(?:'
+        r'HD|SD|FHD|UHD|4K|超高清|高清|蓝光|标清|'
+        r'综合频道?|电视频道?|直播频道?|官方频道?|'
+        r'频道|TV|台|官方|正版|流畅|备用|测试|'
+        r'Ch|CH|Channel|咪咕|真|极速|'
+        r')$'
+    )
+    name = re.sub(suffix_pattern, '', name, flags=re.IGNORECASE).strip()
+
+    # 智能标准化 CCTV 编号
+    def cctv_replacer(m):
+        num_part = m.group(1)
+        digits = re.search(r'[0-9]+', num_part)
+        if not digits:
+            return m.group(0)
+        num_int = int(digits.group())
+        suffix = ''
+        if '+' in num_part:
+            suffix = '+'
+        elif 'k' in num_part.lower():
+            suffix = 'K'
+        return f"CCTV{num_int}{suffix}"
+
+    name = re.sub(
+        r'^CCTV[-\s]*([0-9][0-9\s\+\-kK]*)',
+        cctv_replacer,
+        name,
+        flags=re.IGNORECASE
+    )
+
+    # 标准化 CGTN 前缀
+    name = re.sub(r'^CGTN[-\s]+', 'CGTN ', name, flags=re.IGNORECASE).strip()
+
+    # 常见频道别名映射
     name_map = {
         "CCTV1综合": "CCTV1", "CCTV2财经": "CCTV2", "CCTV3综艺": "CCTV3",
         "CCTV4国际": "CCTV4", "CCTV4中文国际": "CCTV4", "CCTV4欧洲": "CCTV4",
@@ -27,7 +100,25 @@ def channel_name_normalize(name):
         "CCTV5+体育赛视": "CCTV5+", "CCTV5+体育赛事": "CCTV5+", "CCTV5+体育": "CCTV5+"
     }
     name = name_map.get(name, name)
-    return name
+
+    return name if name else original
+
+
+def guess_group(title):
+    """根据频道标题猜测所属分组"""
+    for pat, grp in GROUP_RULES:
+        if re.search(pat, title, re.IGNORECASE):
+            return grp
+    return "📺 其他频道"
+
+
+def natural_sort_key(s):
+    """自然排序：数字优先，例如 CCTV2 在 CCTV10 前面"""
+    def convert(text):
+        return int(text) if text.isdigit() else text.lower()
+
+    return tuple(convert(p) for p in re.split(r'(\d+)', s))
+
 
 # 获取频道名称中的数字
 def channel_key(channel_name):
@@ -35,6 +126,7 @@ def channel_key(channel_name):
     if match:
         return int(match.group())
     return float('inf')
+
 
 # 生成同一C段的所有IP的URL
 def generate_ip_range_urls(base_url, ip_address, port, suffix=None):
@@ -44,9 +136,11 @@ def generate_ip_range_urls(base_url, ip_address, port, suffix=None):
     c_prefix = '.'.join(ip_parts[:3])
     return [f"{base_url}{c_prefix}.{i}{port}{suffix if suffix else ''}" for i in range(1, 256)]
 
+
 # 固定并发数，移除对psutil的依赖
 def adjust_concurrency():
-    return 100  # 使用固定的默认并发数
+    return 100
+
 
 # 增加超时重试机制
 def is_url_accessible(url, retries=3):
@@ -57,6 +151,7 @@ def is_url_accessible(url, retries=3):
         except requests.RequestException:
             continue
     return None
+
 
 # 并发检测URL可用性
 def check_urls_concurrent(urls, timeout=1, print_valid=True):
@@ -75,6 +170,7 @@ def check_urls_concurrent(urls, timeout=1, print_valid=True):
                 if print_valid:
                     print(result)
     return valid_urls
+
 
 # jsmpeg模式获取频道
 def get_channels_alltv(csv_file):
@@ -113,6 +209,7 @@ def get_channels_alltv(csv_file):
         except Exception:
             continue
     return channels
+
 
 # txiptv模式获取频道（异步）
 async def get_channels_newnew(csv_file):
@@ -166,11 +263,12 @@ async def get_channels_newnew(csv_file):
                     if isinstance(item, dict):
                         name = item.get('name')
                         urlx = item.get('url')
+                        if not name or not urlx:
+                            continue
                         if ',' in urlx:
                             urlx = "aaaaaaaa"
                         urld = urlx if 'http' in urlx else f"{url_x}{urlx}"
-                        if name and urlx:
-                            channels.append((channel_name_normalize(name), urld))
+                        channels.append((channel_name_normalize(name), urld))
                 return channels
             except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
                 return []
@@ -191,6 +289,7 @@ async def get_channels_newnew(csv_file):
         tasks = [asyncio.create_task(fetch_json(session, url, semaphore)) for url in valid_urls]
         results = await asyncio.gather(*tasks)
         return [channel for sublist in results for channel in sublist]
+
 
 # zhgxtv模式获取频道
 def get_channels_hgxtv(csv_file):
@@ -229,6 +328,7 @@ def get_channels_hgxtv(csv_file):
             continue
     return channels
 
+
 # 测试频道速度并输出结果
 def test_speed_and_output(channels, output_prefix="itvlist"):
     task_queue = Queue()
@@ -249,6 +349,8 @@ def test_speed_and_output(channels, output_prefix="itvlist"):
                 content = requests.get(ts_url, timeout=5).content
                 end_time = os.times()[0]
                 response_time = end_time - start_time
+                if response_time <= 0:
+                    response_time = 0.001
                 if content:
                     file_size = len(content)
                     download_speed = file_size / response_time / 1024
@@ -257,8 +359,9 @@ def test_speed_and_output(channels, output_prefix="itvlist"):
             except:
                 error_channels.append((channel_name, channel_url))
             finally:
-                progress = (len(speed_results) + len(error_channels)) / len(channels) * 100
-                print(f"可用频道：{len(speed_results)} 个 , 不可用频道：{len(error_channels)} 个 , 总频道：{len(channels)} 个 ,总进度：{progress:.2f} %。")
+                total = len(channels)
+                progress = (len(speed_results) + len(error_channels)) / total * 100 if total else 100
+                print(f"可用频道：{len(speed_results)} 个 , 不可用频道：{len(error_channels)} 个 , 总频道：{total} 个 ,总进度：{progress:.2f} %。")
                 task_queue.task_done()
 
     num_threads = 50
@@ -269,87 +372,63 @@ def test_speed_and_output(channels, output_prefix="itvlist"):
         task_queue.put(channel)
     task_queue.join()
 
-    # 按速度排序并筛选每个频道最多15个源
-    from collections import defaultdict
-    channel_sources = defaultdict(list)
-    for channel_name, channel_url, speed in speed_results:
-        channel_sources[channel_name].append((channel_url, speed))
+    # ========== 相同频道只保留质量最好的一个 ==========
+    best_by_channel = {}
+    for channel_name, channel_url, speed_str in speed_results:
+        try:
+            speed_val = float(speed_str.split()[0])
+        except Exception:
+            speed_val = 0.0
 
-    optimized_sources = []
-    for channel_name, sources in channel_sources.items():
-        sorted_sources = sorted(sources, key=lambda x: float(x[1].split()[0]), reverse=True)[:15]
-        for url, speed in sorted_sources:
-            optimized_sources.append((channel_name, url, speed))
+        old = best_by_channel.get(channel_name)
+        if old is None or speed_val > old[3]:
+            best_by_channel[channel_name] = (channel_name, channel_url, speed_str, speed_val)
 
-    # 去重
-    unique_channels = []
-    seen = set()
-    for channel_name, channel_url, speed in optimized_sources:
-        key = (channel_name, channel_url)
-        if key not in seen:
-            unique_channels.append((channel_name, channel_url, speed))
-            seen.add(key)
+    unique_channels = [
+        (name, url, speed)
+        for name, (_, url, speed, _) in best_by_channel.items()
+    ]
 
-    # 对频道进行排序
-    def custom_sort_key(item):
-        name = item[0]
-        if name.startswith('CCTV'):
-            num = re.search(r'\d+', name)
-            if num:
-                return (0, int(num.group()))
-            return (0, float('inf'))
-        return (1, name)
+    # ========== 按参考 py 的规则分类 ==========
+    group_to_channels = defaultdict(list)
+    for item in unique_channels:
+        group = guess_group(item[0])
+        group_to_channels[group].append(item)
 
-    unique_channels.sort(key=custom_sort_key)
+    # 组内自然排序
+    for group in group_to_channels:
+        group_to_channels[group].sort(key=lambda x: natural_sort_key(x[0]))
 
-    def write_to_file(file, results, genre):
-        channel_counters = {}
-        for result in results:
-            channel_name, channel_url, _ = result
-            if genre == '央视频道' and 'CCTV' in channel_name or \
-                    genre == '卫视频道' and '卫视' in channel_name or \
-                    genre == '其他频道' and 'CCTV' not in channel_name and '卫视' not in channel_name and '测试' not in channel_name:
-                if channel_name in channel_counters:
-                    if channel_counters[channel_name] < 8:
-                        file.write(f"{channel_name},{channel_url}\n")
-                        channel_counters[channel_name] += 1
-                else:
-                    file.write(f"{channel_name},{channel_url}\n")
-                    channel_counters[channel_name] = 1
+    ordered_groups = []
+    for group_name in GROUP_OUTPUT_ORDER:
+        if group_name in group_to_channels:
+            ordered_groups.append((group_name, group_to_channels[group_name]))
 
+    for group_name, chs in group_to_channels.items():
+        if group_name not in GROUP_OUTPUT_ORDER:
+            ordered_groups.append((group_name, chs))
+
+    # 写 TXT
     with open(f"{output_prefix}.txt", 'w', encoding='utf-8') as txt_file:
-        txt_file.write('央视频道,#genre#\n')
-        write_to_file(txt_file, unique_channels, '央视频道')
-        txt_file.write('卫视频道,#genre#\n')
-        write_to_file(txt_file, unique_channels, '卫视频道')
-        txt_file.write('其他频道,#genre#\n')
-        write_to_file(txt_file, unique_channels, '其他频道')
+        for group_name, chs in ordered_groups:
+            txt_file.write(f"{group_name},#genre#\n")
+            for channel_name, channel_url, _ in chs:
+                txt_file.write(f"{channel_name},{channel_url}\n")
 
+    # 写 M3U
     with open(f"{output_prefix}.m3u", 'w', encoding='utf-8') as m3u_file:
         m3u_file.write('#EXTM3U\n')
-        def write_to_m3u(file, results, genre):
-            channel_counters = {}
-            for result in results:
-                channel_name, channel_url, _ = result
-                if genre == '央视频道' and 'CCTV' in channel_name or \
-                        genre == '卫视频道' and '卫视' in channel_name or \
-                        genre == '其他频道' and 'CCTV' not in channel_name and '卫视' not in channel_name and '测试' not in channel_name:
-                    if channel_name in channel_counters:
-                        if channel_counters[channel_name] < 8:
-                            file.write(f"#EXTINF:-1 group-title=\"{genre}\",{channel_name}\n")
-                            file.write(f"{channel_url}\n")
-                            channel_counters[channel_name] += 1
-                    else:
-                        file.write(f"#EXTINF:-1 group-title=\"{genre}\",{channel_name}\n")
-                        file.write(f"{channel_url}\n")
-                        channel_counters[channel_name] = 1
-        write_to_m3u(m3u_file, unique_channels, '央视频道')
-        write_to_m3u(m3u_file, unique_channels, '卫视频道')
-        write_to_m3u(m3u_file, unique_channels, '其他频道')
+        for group_name, chs in ordered_groups:
+            for channel_name, channel_url, _ in chs:
+                m3u_file.write(f'#EXTINF:-1 group-title="{group_name}",{channel_name}\n')
+                m3u_file.write(f'{channel_url}\n')
 
+    # 写 speed.txt
     with open("speed.txt", 'w', encoding='utf-8') as speed_file:
-        for result in unique_channels:
-            speed_file.write(f"{','.join(result)}\n")
+        for group_name, chs in ordered_groups:
+            for channel_name, channel_url, speed in chs:
+                speed_file.write(f"{channel_name},{channel_url},{speed}\n")
+
 
 # 主入口函数
 def main():
@@ -374,10 +453,6 @@ def main():
 
     test_speed_and_output(channels, args.output)
 
+
 if __name__ == "__main__":
     main()
-
-
-
-
-
