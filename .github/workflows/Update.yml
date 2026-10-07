@@ -6,7 +6,7 @@ on:
       top:
         description: '每频道保留最快N个源'
         required: false
-        default: '10'
+        default: '1'
       proxy:
         description: 'http://127.0.0.1:7897'
         required: false
